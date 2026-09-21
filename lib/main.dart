@@ -97,6 +97,35 @@ class _CalculatorPageState extends State<CalculatorPage> {
     }
   }
 
+  void _square() {
+    if (_expression.isEmpty ||
+        _isOperator(_expression[_expression.length - 1])) {
+      return;
+    }
+
+    final operandMatch = RegExp(
+      r'(-?(?:\d+\.?\d*|\.\d+))$',
+    ).firstMatch(_expression);
+    if (operandMatch == null) return;
+
+    final operand = num.tryParse(operandMatch.group(1)!);
+    final squared = operand == null ? null : operand * operand;
+    if (squared == null || squared.isNaN || squared.isInfinite) {
+      setState(() {
+        _result = 'Error';
+        _hasEvaluated = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _expression = _expression.substring(0, operandMatch.start) +
+          _formatNumber(squared);
+      _result = '';
+      _hasEvaluated = false;
+    });
+  }
+
   bool _isDigit(String value) => RegExp(r'^[0-9]$').hasMatch(value);
 
   bool _isOperator(String value) => '+-*/'.contains(value);
@@ -170,6 +199,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
               ? _clear
               : label == '='
               ? _evaluate
+              : label == 'x²'
+              ? _square
               : null,
         );
       }).toList(),
@@ -232,7 +263,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  _buttonRow(['+', '/', '*', '-']),
+                  _buttonRow(['x²', '+', '/', '*', '-']),
                   _buttonRow(['7', '8', '9', 'C']),
                   _buttonRow(['4', '5', '6']),
                   _buttonRow(['1', '2', '3']),
